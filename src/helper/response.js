@@ -38,6 +38,15 @@ const response = {
     }
     res.json(result)
   },
+  tokenErr: (res, data, message) => {
+    const result = {
+      message,
+      success: true,
+      code: 500,
+      data,
+    }
+    res.json(result)
+  }
 
 }
 

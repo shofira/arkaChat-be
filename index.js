@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const { PORT } = require('./src/helper/env')
+const { authenticate, authorize } = require('./src/helper/auth')
 
 const userRouter = require('./src/routers/user')
 

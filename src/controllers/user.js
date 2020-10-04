@@ -84,13 +84,13 @@ const user = {
               jwt.sign({
                 email: results.email,
                 username: results.username
-              }, JWTKEY, { expiresIn: 60 }, (err, token) => {
+              }, JWTKEY, { expiresIn: 20 }, (err, token) => {
                 if (err) {
                   failed(res, [], err.message)
                 } else {
                   if (userRefreshToken === null) {
                     const id = results.id
-                    const refreshToken = jwt.sign({id}, REFRESHTOKEN)
+                    const refreshToken = jwt.sign({ id }, REFRESHTOKEN)
                     userModel.updateRefreshToken(refreshToken, id).then(() => {
                       const data = {
                         token,
@@ -117,7 +117,38 @@ const user = {
           }
         }).catch((err) => {
           failed(res, [], err.message)
+        })
+    } catch (error) {
+      failed(res, [], 'Internal Server Error')
+    }
+  },
+  renewToken: (req, res) => {
+    const refreshToken = req.body.refreshToken
+    userModel.checkRefreshToken(refreshToken)
+      .then((result) => {
+        if (result.length >= 1) {
+          const user = result[0]
+          const newToken = jwt.sign({ email: user.email, username: user.username }, JWTKEY, { expiresIn: 3600 })
+          const data = {
+            token: newToken,
+            refreshToken
+          }
+          tokenResult(res, data, 'Refresh Token Success')
+        } else {
+          failed(res, [], 'Refresh Token Not Found')
+        }
       })
+      .catch((err) => failed(res, [], err.message))
+  },
+  logout: (req, res) => {
+    try {
+      const id = req.params.id
+      userModel.logout(id)
+        .then((result) => {
+          success(res, result, 'Logout Success')
+        }).catch((err) => {
+          failed(res, [], err.message)
+        })
     } catch (error) {
       failed(res, [], 'Internal Server Error')
     }

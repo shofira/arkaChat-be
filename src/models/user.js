@@ -133,7 +133,18 @@ const user = {
         }
       })
     })
-  }
+  },
+  update: (data, id) => {
+    return new Promise((resolve, reject) => {
+        db.query(`UPDATE users SET ? WHERE id = ?`, [data, id], (err, result) => {
+            if(err) {
+                reject(new Error(err))
+            } else {
+                resolve(result)
+            }
+        })
+    })
+},
 }
 
 module.exports = user

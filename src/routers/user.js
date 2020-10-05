@@ -1,5 +1,5 @@
 const express = require('express')
-const { register, activate, login, renewToken, logout } = require('../controllers/user')
+const { register, activate, login, renewToken, forgotPassword, renewPassword, logout, detail } = require('../controllers/user')
 const { authenticate, authorize } = require('../helper/auth')
 
 const router = express.Router()
@@ -9,6 +9,9 @@ router
   .get('/activate/:token', activate)
   .post('/login', login)
   .post("/refresh", renewToken)
+  .post('/forgot', forgotPassword)
+  .post('/resetPass/:userKey', renewPassword)
   .post('/logout/:id', authenticate, authorize, logout)
+  .get('/getDetail/:id', detail)
 
 module.exports = router

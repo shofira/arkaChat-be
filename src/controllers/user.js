@@ -1,6 +1,6 @@
 const userModel = require('../models/user')
 const { success, failed, tokenResult } = require('../helper/response')
-const { JWTKEY, MAIL, PS, URL, REFRESHTOKEN } = require('../helper/env')
+const { JWTKEY, MAIL, PS, URL, REFRESHTOKEN, urlForgot } = require('../helper/env')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
@@ -44,7 +44,7 @@ const user = {
           <p>Please Activate your email to get access in <b>ArkaChat</b> ^_^ <br />
           <a href="${URL}/users/activate/${activateKey}">Klik here to activate</a></p>`
         })
-        success(res, result, 'send email success')
+        success(res, result, 'Send email success')
 
       }).catch((err) => failed(res, [], err.message))
     } catch (error) {
@@ -93,6 +93,7 @@ const user = {
                     const refreshToken = jwt.sign({ id }, REFRESHTOKEN)
                     userModel.updateRefreshToken(refreshToken, id).then(() => {
                       const data = {
+                        id,
                         token,
                         refreshToken
                       }
@@ -102,6 +103,7 @@ const user = {
                     })
                   } else {
                     const data = {
+                      id: results.id,
                       token,
                       refreshToken
                     }
@@ -140,6 +142,75 @@ const user = {
       })
       .catch((err) => failed(res, [], err.message))
   },
+  forgotPassword: async (req, res) => {
+    try {
+      const email = req.body.email
+
+      userModel.checkEmail(email).then(() => {
+        const userkey = jwt.sign({ email }, JWTKEY)
+
+        userModel.updateKey(userkey, email).then(async (result) => {
+          let transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: {
+              user: MAIL,
+              pass: PS
+            }
+          })
+
+          let info = await transporter.sendMail({
+            from: '"ArkaChat" <ArkaChat@gmail.com>',
+            to: email,
+            subject: 'Forgot Password',
+            html:
+              `Hello! <br />
+            <p>We have sent you this email in response to your request to reset your password on <b>ArkaChat</b> ^_^ <br />
+            <a href="${urlForgot}/forgot?${userkey}">Klik here to reset your password</a></p>`
+          })
+          success(res, result, 'Send email success')
+
+        }).catch((err) => failed(res, [], err.message))
+      })
+
+    } catch (error) {
+      failed(res, [], 'Internal Server Error')
+    }
+  },
+  renewPassword: async (req, res) => {
+    try {
+      const body = req.body
+      const salt = await bcrypt.genSalt(10)
+      const hashPass = await bcrypt.hash(body.password, salt)
+      const key = req.params.userKey
+
+      userModel.renewPassword(hashPass, key)
+        .then((result) => {
+          success(res, result, 'Update password success')
+          jwt.verify(key, JWTKEY, (err, response) => {
+            console.log(response)
+            if (err) {
+              failed(res, [], 'Failed reset userkey!')
+            } else {
+              const email = response.email
+              userModel.resetKey(email)
+                .then((results) => {
+                  console.log(results)
+                  success(res, results, 'Update password success')
+                }).catch((err) => {
+                  failed(res, [], err.message)
+                })
+            }
+          })
+        }).catch((err) => {
+          failed(res, [], err.message)
+        })
+
+    } catch (error) {
+      failed(res, [], 'Internal Server Error')
+    }
+  },
   logout: (req, res) => {
     try {
       const id = req.params.id
@@ -149,6 +220,22 @@ const user = {
         }).catch((err) => {
           failed(res, [], err.message)
         })
+    } catch (error) {
+      failed(res, [], 'Internal Server Error')
+    }
+  },
+  detail: (req, res) => {
+    try {
+      const id = req.params.id
+      userModel.getDetail(id).then((result) => {
+        if (result.length > 0) {
+          success(res, result, 'Get detail success')
+        } else {
+          failed(res, [], 'Data detail not found')
+        }
+      }).catch((err) => {
+        failed(res, [], err.message)
+      })
     } catch (error) {
       failed(res, [], 'Internal Server Error')
     }

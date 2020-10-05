@@ -13,6 +13,7 @@ const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(cors())
+app.use(express.static('src/images'))
 
 app.use('/users', userRouter)
 

@@ -84,7 +84,7 @@ const user = {
               jwt.sign({
                 email: results.email,
                 username: results.username
-              }, JWTKEY, { expiresIn: 20 }, (err, token) => {
+              }, JWTKEY, { expiresIn: 3600 }, (err, token) => {
                 if (err) {
                   failed(res, [], err.message)
                 } else {

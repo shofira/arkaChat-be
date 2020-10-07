@@ -94,10 +94,12 @@ const user = {
                 } else {
                   if (userRefreshToken === null) {
                     const id = results.id
+                    const username = results.username
                     const refreshToken = jwt.sign({ id }, REFRESHTOKEN)
                     userModel.updateRefreshToken(refreshToken, id).then(() => {
                       const data = {
                         id,
+                        username,
                         token,
                         refreshToken
                       }
@@ -108,6 +110,7 @@ const user = {
                   } else {
                     const data = {
                       id: results.id,
+                      username: results.username,
                       token,
                       refreshToken
                     }
@@ -293,7 +296,6 @@ const user = {
       failed(res, [], 'Internal Server Error')
     }
   }
-
 }
 
 module.exports = user

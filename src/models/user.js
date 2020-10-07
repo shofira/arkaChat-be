@@ -136,15 +136,27 @@ const user = {
   },
   update: (data, id) => {
     return new Promise((resolve, reject) => {
-        db.query(`UPDATE users SET ? WHERE id = ?`, [data, id], (err, result) => {
-            if(err) {
-                reject(new Error(err))
-            } else {
-                resolve(result)
-            }
-        })
+      db.query(`UPDATE users SET ? WHERE id = ?`, [data, id], (err, result) => {
+          if(err) {
+            reject(new Error(err))
+          } else {
+            resolve(result)
+          }
+      })
     })
-},
+  },
+  sort: (search) => {
+    return new Promise((resolve, reject) => {
+      db.query(`SELECT * FROM users WHERE username LIKE '%${search}%'`,
+        (err, res) => {
+          if (err) {
+            reject(new Error(err))
+          }
+          resolve(res)
+        }
+      )
+    })
+  }
 }
 
 module.exports = user

@@ -6,17 +6,23 @@ const socketio = require('socket.io')
 const db = require('./src/config/db')
 const { PORT, DB } = require('./src/helper/env')
 const { authenticate, authorize } = require('./src/helper/auth')
+const path = require('path')
 
 // import router
 const userRouter = require('./src/routers/user')
 const MessageRouter = require('./src/routers/message')
-const { join } = require('path')
 
 const app = express()
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(cors())
 app.use(express.static('src/images'))
+
+// for deploy
+app.use(express.static(path.join(__dirname, './dist')))
+app.use('*', (req, res) => {
+  res.sendFile(__dirname, './dist/index.html')
+})
 
 app.use('/users', userRouter)
 app.use('/message', MessageRouter)

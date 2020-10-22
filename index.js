@@ -9,6 +9,7 @@ const { authenticate, authorize } = require('./src/helper/auth')
 
 // import router
 const userRouter = require('./src/routers/user')
+const MessageRouter = require('./src/routers/message')
 const { join } = require('path')
 
 const app = express()
@@ -18,14 +19,13 @@ app.use(cors())
 app.use(express.static('src/images'))
 
 app.use('/users', userRouter)
+app.use('/message', MessageRouter)
 
 const server = http.createServer(app)
 const io = socketio(server)
 
 io.on('connection', (socket) => {
-  console.log('User Connected!')
-
-  socket.on('get-all-users', (id) => {
+  socket.on('get-all-users', () => {
     db.query(`SELECT * FROM users`, (err, result) => {
       if (err) {
         console.log(err)
@@ -35,17 +35,34 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('send-message', (payload) => {
-    const message = `${payload.sender} : ${payload.message}`
-    io.to(payload.receiver).emit('list-messages', {
-      sender: payload.sender,
-      receiver: payload.receiver,
-      message: message
-    })
-  })
-
   socket.on('join-room', (payload) => {
     socket.join(payload.user)
+  })
+  
+  
+  socket.on('send-message', (payload) => {
+    db.query(`INSERT INTO message (sender, receiver, message) VALUES ('${payload.sender}','${payload.receiver}','${payload.message}')`, (err,result) =>{
+      if(err){
+        console.log(new Error(err))
+      } else {
+        io.to(payload.receiver).emit('list-message', {
+            sender: payload.username,
+            receiver: payload.receiver,
+            msg: payload.message
+        })
+      }
+    })
+  })
+  
+  socket.on('get-history-message', (payload) => {
+    db.query(`SELECT * FROM message WHERE (sender = '${payload.sender}' AND receiver = '${payload.receiver}') 
+    OR (sender = '${payload.receiver}' AND receiver = '${payload.sender}')`,(err,result) => {
+      if(err) {
+        console.log(err)
+      }else {
+        io.to(payload.sender).emit('history-list-messages', result)
+      }
+    })
   })
 
   socket.on('typing', (data) => {

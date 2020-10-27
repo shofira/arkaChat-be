@@ -13,17 +13,19 @@ const userRouter = require('./src/routers/user')
 const MessageRouter = require('./src/routers/message')
 
 const app = express()
+
+// Deploy
+app.use(express.static(path.join(__dirname, './dist')))
+app.get('/*', (req,res) => {
+  res.sendFile(path.join(__dirname, './dist/index.html'))
+})
+
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(cors())
 app.use(express.static('src/images'))
 
-// for deploy
-app.use(express.static(path.join(__dirname, './dist')))
-app.use('*', (req, res) => {
-  res.sendFile(__dirname, './dist/index.html')
-})
-
+// root
 app.use('/users', userRouter)
 app.use('/message', MessageRouter)
 

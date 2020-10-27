@@ -1,11 +1,10 @@
 # arkaChat-be
-Backend chatting apps using express js and additional package
+ArkaChat merupakan aplikasi chatting yang bertujuan untuk mempermudah komunikasi antar user. Aplikasi ini menggunakan teknologi MEVNS ( MYSQL, Express Js, Vue Js, Node Js, dan Socket.io) serta dilengkapi dengan fitur chat realtime, dan crud data users
 
 ## How to run
 ```
 npm install
 ```
-### then
 ```
 npm start
 ```
